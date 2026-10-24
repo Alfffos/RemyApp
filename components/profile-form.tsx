@@ -8,14 +8,13 @@ const steps = [
   { title: 'Tu ritmo diario', description: 'Tu movimiento cotidiano también cuenta, además del ejercicio.', short: 'Actividad' },
   { title: '¿Qué querés lograr?', description: 'Elegí el objetivo que mejor representa este momento.', short: 'Objetivo' },
   { title: 'A tu gusto y a tu tiempo', description: 'Organicemos un plan que encaje con tu manera de comer.', short: 'Alimentación' },
-  { title: 'Un último cuidado', description: 'Estas respuestas nos ayudan a saber si el plan necesita una evaluación profesional.', short: 'Salud' },
   { title: 'Todo empieza por vos', description: 'Revisá tus respuestas. Podés editar cualquier sección antes de continuar.', short: 'Resumen' },
 ]
 const labels: Record<string, string> = {
   female: 'Femenino', male: 'Masculino', seated: 'Principalmente sentado/a', moving: 'Movimiento frecuente',
   physical: 'Trabajo físicamente exigente', light: 'Suave', moderate: 'Moderado', intense: 'Intenso',
   lose: 'Perder peso', maintain: 'Mantener mi peso', gain: 'Ganar peso', omnivore: 'Sin restricción',
-  vegetarian: 'Vegetariana', vegan: 'Vegana', week: 'Una semana', month: 'Un mes', yes: 'Sí', no: 'No',
+  vegetarian: 'Vegetariana', vegan: 'Vegana', week: 'Cada semana', month: 'Cada mes', yes: 'Sí', no: 'No',
 }
 
 function Field({ name, label, hint, error, children }: { name: string; label: string; hint?: string; error?: string; children: ReactNode }) {
@@ -46,7 +45,7 @@ export function ProfileForm() {
     setStep(next); setErrors({}); setFinished(false)
     requestAnimationFrame(() => { titleRef.current?.focus(); titleRef.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' }) })
   }
-  function edit(next: number) { setEditing(step === 5 || editing); move(next) }
+  function edit(next: number) { setEditing(step === 4 || editing); move(next) }
   function advance() {
     const nextErrors = validateStep(step, draft)
     if (Object.keys(nextErrors).length) {
@@ -54,11 +53,11 @@ export function ProfileForm() {
       requestAnimationFrame(() => errorRef.current?.focus())
       return
     }
-    const next = editing ? 5 : step + 1
+    const next = editing ? 4 : step + 1
     setEditing(false); move(next)
   }
   function finish() {
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 4; i++) {
       const nextErrors = validateStep(i, draft)
       if (Object.keys(nextErrors).length) {
         setEditing(true); move(i); setErrors(nextErrors)
@@ -133,11 +132,11 @@ export function ProfileForm() {
         <div className="privacy-note"><span aria-hidden="true">◈</span><p><strong>Tu información es tuya.</strong><br />Se usa durante esta sesión. No se guarda en una base de datos y se borra al recargar.</p></div>
       </aside>
       <section className="form-card" aria-labelledby="step-title">
-        <div className="card-topline"><span>TU PERFIL ALIMENTARIO</span><span>{String(step + 1).padStart(2, '0')} <span className="muted">/ 06</span></span></div>
-        <div className="progress-track" role="progressbar" aria-label="Progreso del formulario" aria-valuemin={1} aria-valuemax={6} aria-valuenow={step + 1}><span style={{ width: ((step + 1) / 6 * 100) + '%' }} /></div>
+        <div className="card-topline"><span>TU PERFIL ALIMENTARIO</span><span>{String(step + 1).padStart(2, '0')} <span className="muted">/ 05</span></span></div>
+        <div className="progress-track" role="progressbar" aria-label="Progreso del formulario" aria-valuemin={1} aria-valuemax={5} aria-valuenow={step + 1}><span style={{ width: ((step + 1) / 5 * 100) + '%' }} /></div>
         <div className="card-body">
-          <div className="step-heading"><span className="section-icon" aria-hidden="true">{['◎', '↗', '⚑', '◒', '♡', '✓'][step]}</span><h2 id="step-title" tabIndex={-1} ref={titleRef}>{steps[step].title}</h2><p>{steps[step].description}</p></div>
-          <form noValidate onSubmit={e => { e.preventDefault(); if (step === 5) finish(); else advance() }}>
+          <div className="step-heading"><span className="section-icon" aria-hidden="true">{['◎', '↗', '⚑', '◒', '✓'][step]}</span><h2 id="step-title" tabIndex={-1} ref={titleRef}>{steps[step].title}</h2><p>{steps[step].description}</p></div>
+          <form noValidate onSubmit={e => { e.preventDefault(); if (step === 4) finish(); else advance() }}>
             {Object.keys(errors).length > 0 && <div className="notice error-notice" tabIndex={-1} ref={errorRef} role="alert"><strong>Revisá estos datos para continuar.</strong><ul>{Object.entries(errors).map(([key, value]) => <li key={key}>{value}</li>)}</ul></div>}
             <div className="step-content">
             {step === 0 && <>
@@ -180,30 +179,22 @@ export function ProfileForm() {
               {draft.allergies.includes('Otra') && <Field name="otherAllergy" label="¿Qué otra alergia o intolerancia tenés?" error={errors.otherAllergy}><input {...inputProps('otherAllergy', false)} value={draft.otherAllergy} maxLength={300} onChange={e => update('otherAllergy', e.target.value)} /></Field>}
               <Field name="excludedFoods" label="Alimentos que preferís evitar" hint="Opcional. Separalos con comas; por ejemplo: brócoli, aceitunas." error={errors.excludedFoods}><textarea {...inputProps('excludedFoods')} rows={2} maxLength={1000} value={draft.excludedFoods} onChange={e => update('excludedFoods', e.target.value)} /></Field>
               {chips('meals', '¿Qué comidas incluimos?', meals)}
-              <fieldset className="choice-field"><legend>Horarios aproximados</legend><p className="field-hint">Opcionales. Se aplican a los días seleccionados.</p><div className="field-grid">{meals.filter(meal => draft.meals.includes(meal)).map(meal => <Field name={'time-' + meal} label={meal} key={meal}><input id={'time-' + meal} type="time" value={draft.times[meal] || ''} onChange={e => update('times', { ...draft.times, [meal]: e.target.value })} /></Field>)}</div>{errors.times && <p className="field-error">{errors.times}</p>}</fieldset>
               {chips('days', 'Días que querés planificar', weekdays, 'Se repetirán en cada semana del período elegido.')}
-              {choices('duration', '¿Para cuánto tiempo?', [{ value: 'week', label: 'Una semana' }, { value: 'month', label: 'Un mes' }])}
+              {choices('duration', '¿Cada cuánto hacés las compras?', [{ value: 'week', label: 'Cada semana' }, { value: 'month', label: 'Cada mes' }])}
               <Field name="cookingTime" label="Tiempo máximo para preparar una comida" hint="Opcional"><select {...inputProps('cookingTime')} value={draft.cookingTime} onChange={e => update('cookingTime', e.target.value)}><option value="">Sin preferencia</option><option value="15">Hasta 15 minutos</option><option value="30">Hasta 30 minutos</option><option value="60">Hasta 60 minutos</option></select></Field>
             </>}
             {step === 4 && <>
-              <div className="gentle-note"><span aria-hidden="true">i</span><p>Remy está pensado para adultos. Algunas situaciones requieren acompañamiento profesional para adaptar la alimentación.</p></div>
-              {choices('pregnancy', '¿Estás cursando un embarazo?', [{ value: 'no', label: 'No / No aplica' }, { value: 'yes', label: 'Sí' }])}
-              {choices('breastfeeding', '¿Estás en período de lactancia?', [{ value: 'no', label: 'No / No aplica' }, { value: 'yes', label: 'Sí' }])}
-              {choices('medicalCondition', '¿Tenés alguna condición médica o indicación profesional que requiera adaptar tu alimentación?', [{ value: 'no', label: 'No' }, { value: 'yes', label: 'Sí' }], 'Por ejemplo, una enfermedad renal, diabetes o un trastorno de la conducta alimentaria. No hace falta detallar tu historia clínica.')}
-            </>}
-            {step === 5 && <>
               {summary(0, [['Edad', draft.age + ' años'], ['Altura', draft.height + ' cm'], ['Peso actual', draft.weight + ' kg'], ['Sexo para el cálculo', labels[draft.sex]]])}
               {summary(1, [['Actividad cotidiana', labels[draft.dailyActivity]], ['Ejercicio', Number(draft.exerciseDays) > 0 ? draft.exerciseDays + ' días/semana · ' + draft.exerciseMinutes + ' min · ' + labels[draft.exerciseIntensity] : 'Sin ejercicio habitual']])}
               {summary(2, [['Objetivo', labels[draft.goal]], ...(draft.goal === 'gain' ? [['Aumentar masa muscular', labels[draft.muscleGain]] as [string, string]] : []), ...(draft.goal !== 'maintain' && draft.targetWeight ? [['Peso objetivo', draft.targetWeight + ' kg'] as [string, string]] : [])])}
-              {summary(3, [['Alimentación', labels[draft.diet]], ['Alergias e intolerancias', draft.allergies.map(a => a === 'Otra' ? draft.otherAllergy : a).join(', ') || 'Ninguna informada'], ['Alimentos a evitar', draft.excludedFoods || 'Sin preferencias adicionales'], ['Comidas', meals.filter(m => draft.meals.includes(m)).map(m => m + (draft.times[m] ? ' · ' + draft.times[m] : '')).join(' / ')], ['Días', weekdays.filter(d => draft.days.includes(d)).join(', ')], ['Duración', labels[draft.duration]], ['Tiempo para cocinar', draft.cookingTime ? 'Hasta ' + draft.cookingTime + ' min' : 'Sin preferencia']])}
-              {summary(4, [['Embarazo', labels[draft.pregnancy]], ['Lactancia', labels[draft.breastfeeding]], ['Condición o indicación alimentaria', labels[draft.medicalCondition]]])}
+              {summary(3, [['Alimentación', labels[draft.diet]], ['Alergias e intolerancias', draft.allergies.map(a => a === 'Otra' ? draft.otherAllergy : a).join(', ') || 'Ninguna informada'], ['Alimentos a evitar', draft.excludedFoods || 'Sin preferencias adicionales'], ['Comidas', meals.filter(m => draft.meals.includes(m)).join(' / ')], ['Días', weekdays.filter(d => draft.days.includes(d)).join(', ')], ['Compras', labels[draft.duration]], ['Tiempo para cocinar', draft.cookingTime ? 'Hasta ' + draft.cookingTime + ' min' : 'Sin preferencia']])}
               {reasons.length > 0 ? <div className="notice" role="status"><strong>Tu plan necesita una evaluación profesional.</strong><ul>{reasons.map(reason => <li key={reason}>{reason}</li>)}</ul><p>Consultá con un/a nutricionista para adaptar el plan a tu situación. La generación automática no está habilitada para estos casos.</p></div> : <div className="gentle-note"><span aria-hidden="true">i</span><p>En esta primera versión dejamos listo tu perfil. La generación de planes estará disponible en una próxima etapa. Las calorías del futuro plan serán una estimación.</p></div>}
               {finished && <div className="notice success-notice" role="status"><strong>Tu perfil está listo.</strong><p>Completaste todos los datos. La generación de planes todavía está en desarrollo; por ahora no se generó ninguna dieta. Podés seguir editando tus respuestas.</p></div>}
             </>}
             </div>
             <footer className="form-footer">
               {step > 0 ? <button type="button" className="back-button" onClick={() => { setEditing(false); move(step - 1) }}>← Atrás</button> : <span className="required-note">Todos los campos de este paso son obligatorios.</span>}
-              <button className="primary-button" type="submit" disabled={step === 5 && (reasons.length > 0 || finished)}>{step === 5 ? (finished ? 'Perfil listo ✓' : 'Generar mi plan') : editing ? 'Guardar y volver al resumen' : 'Continuar'}{step !== 5 && <span aria-hidden="true">→</span>}</button>
+              <button className="primary-button" type="submit" disabled={step === 4 && (reasons.length > 0 || finished)}>{step === 4 ? (finished ? 'Perfil listo ✓' : 'Generar mi plan') : editing ? 'Guardar y volver al resumen' : 'Continuar'}{step !== 4 && <span aria-hidden="true">→</span>}</button>
             </footer>
           </form>
         </div>
