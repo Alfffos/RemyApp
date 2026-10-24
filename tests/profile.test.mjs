@@ -5,7 +5,7 @@ import { emptyProfile, reviewReasons, toDietProfile, validateStep } from '../lib
 function valid() {
   return { ...emptyProfile(), age: '30', height: '170', weight: '72.5', sex: 'female',
     dailyActivity: 'seated', exerciseDays: '0', goal: 'maintain', diet: 'omnivore',
-    pregnancy: 'no', breastfeeding: 'no', medicalCondition: 'no' }
+    pregnancy: 'no', breastfeeding: 'no', medicalCondition: 'no', selectedSupermarkets: ['coto'] }
 }
 test('a complete adult profile passes every step without exercise details', () => {
   const profile = valid()
@@ -37,8 +37,11 @@ test('food choices enforce meals, days, allergy details and valid times', () => 
   assert.ok(validateStep(3, { ...valid(), allergies: ['Otra'] }).otherAllergy)
   assert.ok(validateStep(3, { ...valid(), times: { Cena: '27:00' } }).times)
 })
-test('health answers are required and review cases are identified', () => {
-  assert.ok(validateStep(4, { ...valid(), pregnancy: '' }).pregnancy)
+test('at least one supermarket is required and selected stores reach the contract', () => {
+  assert.ok(validateStep(4, { ...valid(), selectedSupermarkets: [] }).selectedSupermarkets)
+  assert.deepEqual(toDietProfile(valid()).supermarkets.map(s => s.id), ['coto'])
+})
+test('review cases are identified', () => {
   for (const key of ['pregnancy', 'breastfeeding', 'medicalCondition'])
     assert.equal(reviewReasons({ ...valid(), [key]: 'yes' }).length, 1)
   assert.equal(reviewReasons({ ...valid(), age: '17' }).length, 1)
