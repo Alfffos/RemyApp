@@ -1,5 +1,5 @@
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
-import { generateText } from 'ai'
+import { generateText, type ModelMessage } from 'ai'
 
 /** Modelo predeterminado conservado de la configuración de dev. */
 export const DEFAULT_MODEL = 'nvidia/nemotron-3-ultra-550b-a55b:free'
@@ -26,6 +26,44 @@ export class MissingApiKeyError extends Error {
     super('Falta la variable de entorno OPENROUTER_API_KEY')
     this.name = 'MissingApiKeyError'
   }
+}
+
+export class ModelJsonError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'ModelJsonError'
+  }
+}
+
+/** Extracts the first JSON object from a model reply, tolerating code fences and prose. */
+export function parseModelJson(text: string): unknown {
+  const cleaned = text.trim().replace(/^```(?:json)?|```$/gm, '').trim()
+  const match = cleaned.match(/\{[\s\S]*\}/)
+  if (!match) throw new ModelJsonError(`El modelo no devolvió JSON: ${cleaned.slice(0, 200)}`)
+  try {
+    return JSON.parse(match[0])
+  } catch (error) {
+    throw new ModelJsonError(`JSON inválido del modelo: ${(error as Error).message}`)
+  }
+}
+
+/** Multi-turn call that expects a JSON object back. Used by the price scraper. */
+export async function generateModelJson(
+  messages: ModelMessage[],
+  { instructions, model = process.env.OPENROUTER_SCRAPER_MODEL || DEFAULT_MODEL }: GenerateModelResponseOptions = {},
+): Promise<{ json: unknown; text: string }> {
+  const apiKey = process.env.OPENROUTER_API_KEY
+  if (!apiKey) throw new MissingApiKeyError()
+
+  const openrouter = createOpenRouter({ apiKey })
+  const result = await generateText({
+    model: openrouter(model),
+    instructions,
+    messages,
+    temperature: 0,
+    maxRetries: 3,
+  })
+  return { json: parseModelJson(result.text), text: result.text }
 }
 
 export async function generateModelResponse(

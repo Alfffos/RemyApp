@@ -1,6 +1,8 @@
 'use client'
 
 import { useRef, useState, type ReactNode } from 'react'
+import { CartPricing } from '@/components/cart-pricing'
+import { starterCart } from '@/lib/cart/cart'
 import { allergies, emptyProfile, meals, reviewReasons, toDietProfile, validateStep, weekdays, type FieldErrors, type ProfileDraft } from '@/lib/profile/profile'
 
 const steps = [
@@ -66,8 +68,6 @@ export function ProfileForm() {
       }
     }
     if (reasons.length) return
-    // Ready for the future planner. No network request or storage is performed.
-    toDietProfile(draft)
     setFinished(true)
   }
   function inputProps(name: keyof ProfileDraft, hasHint = true) {
@@ -189,7 +189,8 @@ export function ProfileForm() {
               {summary(2, [['Objetivo', labels[draft.goal]], ...(draft.goal === 'gain' ? [['Aumentar masa muscular', labels[draft.muscleGain]] as [string, string]] : []), ...(draft.goal !== 'maintain' && draft.targetWeight ? [['Peso objetivo', draft.targetWeight + ' kg'] as [string, string]] : [])])}
               {summary(3, [['Alimentación', labels[draft.diet]], ['Alergias e intolerancias', draft.allergies.map(a => a === 'Otra' ? draft.otherAllergy : a).join(', ') || 'Ninguna informada'], ['Alimentos a evitar', draft.excludedFoods || 'Sin preferencias adicionales'], ['Comidas', meals.filter(m => draft.meals.includes(m)).join(' / ')], ['Días', weekdays.filter(d => draft.days.includes(d)).join(', ')], ['Compras', labels[draft.duration]], ['Tiempo para cocinar', draft.cookingTime ? 'Hasta ' + draft.cookingTime + ' min' : 'Sin preferencia']])}
               {reasons.length > 0 ? <div className="notice" role="status"><strong>Tu plan necesita una evaluación profesional.</strong><ul>{reasons.map(reason => <li key={reason}>{reason}</li>)}</ul><p>Consultá con un/a nutricionista para adaptar el plan a tu situación. La generación automática no está habilitada para estos casos.</p></div> : <div className="gentle-note"><span aria-hidden="true">i</span><p>En esta primera versión dejamos listo tu perfil. La generación de planes estará disponible en una próxima etapa. Las calorías del futuro plan serán una estimación.</p></div>}
-              {finished && <div className="notice success-notice" role="status"><strong>Tu perfil está listo.</strong><p>Completaste todos los datos. La generación de planes todavía está en desarrollo; por ahora no se generó ninguna dieta. Podés seguir editando tus respuestas.</p></div>}
+              {finished && <div className="notice success-notice" role="status"><strong>Tu perfil está listo.</strong><p>Completaste todos los datos. La generación de planes todavía está en desarrollo; mientras tanto podés comparar precios con un carrito inicial.</p></div>}
+              {finished && <CartPricing initialItems={starterCart(toDietProfile(draft))} />}
             </>}
             </div>
             <footer className="form-footer">
