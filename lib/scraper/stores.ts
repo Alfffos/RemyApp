@@ -9,6 +9,17 @@ export interface Store {
 export const stores: Store[] = [
   { id: 'arcoiris', name: 'Supermercados Arcoiris', url: 'https://arcoirisencasa.com.ar/Login.asp' },
   { id: 'coto', name: 'Coto', url: 'https://www.coto.com.ar/' },
+  { id: 'carrefour', name: 'Carrefour', url: 'https://www.carrefour.com.ar/' },
+  { id: 'jumbo', name: 'Jumbo', url: 'https://www.jumbo.com.ar/' },
+  { id: 'disco', name: 'Disco', url: 'https://www.disco.com.ar/' },
+  { id: 'vea', name: 'Vea', url: 'https://www.vea.com.ar/' },
+  { id: 'dia', name: 'Día', url: 'https://diaonline.supermercadosdia.com.ar/' },
+  { id: 'changomas', name: 'ChangoMás', url: 'https://www.masonline.com.ar/' },
+  { id: 'la-anonima', name: 'La Anónima', url: 'https://www.laanonima.com.ar/' },
+  { id: 'cooperativa-obrera', name: 'Cooperativa Obrera', url: 'https://www.lacoopeencasa.coop/' },
+  { id: 'libertad', name: 'Hipermercado Libertad', url: 'https://www.hiperlibertad.com.ar/' },
+  { id: 'toledo', name: 'Supermercados Toledo', url: 'https://www.toledodigital.com.ar/' },
+  { id: 'maxiconsumo', name: 'Maxiconsumo', url: 'https://maxiconsumo.com/' },
 ]
 
 export const MAX_STORES = 6
