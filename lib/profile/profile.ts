@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { MAX_STORES, stores as knownStores, type Store } from '../scraper/stores.ts'
 
 export const meals = ['Desayuno', 'Almuerzo', 'Merienda', 'Cena', 'Colación'] as const
 export const weekdays = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'] as const
@@ -11,6 +12,7 @@ export interface ProfileDraft {
   diet: string; allergies: string[]; otherAllergy: string; excludedFoods: string
   meals: string[]; days: string[]; times: Record<string, string>; duration: string; cookingTime: string
   pregnancy: string; breastfeeding: string; medicalCondition: string
+  supermarkets: Store[]; selectedSupermarkets: string[]
 }
 
 export function emptyProfile(): ProfileDraft {
@@ -22,6 +24,7 @@ export function emptyProfile(): ProfileDraft {
     meals: ['Desayuno', 'Almuerzo', 'Merienda', 'Cena'], days: [...weekdays],
     times: {}, duration: 'week', cookingTime: '',
     pregnancy: '', breastfeeding: '', medicalCondition: '',
+    supermarkets: knownStores.map(store => ({ ...store })), selectedSupermarkets: [],
   }
 }
 
@@ -67,8 +70,13 @@ const food = z.object({
   if (data.allergies.includes('Otra') && !data.otherAllergy.trim())
     ctx.addIssue({ code: 'custom', path: ['otherAllergy'], message: 'Indicá la alergia o intolerancia adicional.' })
 })
-const health = z.object({ pregnancy: yesNo, breastfeeding: yesNo, medicalCondition: yesNo })
-export const stepSchemas = [basics, activity, objective, food, health] as const
+const supermarkets = z.object({
+  selectedSupermarkets: z.array(z.string())
+    .min(1, 'Elegí al menos un supermercado.')
+    .max(MAX_STORES, `Podés elegir hasta ${MAX_STORES} supermercados.`),
+})
+export const stepSchemas = [basics, activity, objective, food, supermarkets] as const
+export const SUMMARY_STEP = stepSchemas.length
 export type FieldErrors = Record<string, string>
 
 export function validateStep(step: number, draft: ProfileDraft): FieldErrors {
@@ -92,6 +100,10 @@ export function reviewReasons(draft: ProfileDraft): string[] {
   ].filter(Boolean)
 }
 
+export function selectedStores(draft: ProfileDraft): Store[] {
+  return draft.supermarkets.filter(store => draft.selectedSupermarkets.includes(store.id))
+}
+
 // Contract for the future planner. Inactive conditional answers are omitted.
 export function toDietProfile(draft: ProfileDraft) {
   return {
@@ -113,6 +125,7 @@ export function toDietProfile(draft: ProfileDraft) {
       days: draft.days, meals: draft.meals.map(name => ({ name, time: draft.times[name] || null })),
       duration: draft.duration, maxCookingMinutes: draft.cookingTime ? Number(draft.cookingTime) : null,
     },
+    supermarkets: selectedStores(draft),
     health: { pregnancy: draft.pregnancy === 'yes', breastfeeding: draft.breastfeeding === 'yes', medicalCondition: draft.medicalCondition === 'yes' },
   }
 }
