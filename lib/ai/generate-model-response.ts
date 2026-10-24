@@ -1,8 +1,8 @@
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { generateText } from 'ai'
 
-/** Nemotron 3.5 gratuito y rápido. Alternativa más potente: `nvidia/nemotron-3-ultra-550b-a55b:free`. */
-export const DEFAULT_MODEL = 'nvidia/nemotron-3.5-lightning:free'
+/** Modelo predeterminado conservado de la configuración de dev. */
+export const DEFAULT_MODEL = 'nvidia/nemotron-3-ultra-550b-a55b:free'
 
 export interface GenerateModelResponseOptions {
   /** Instrucciones de comportamiento para el modelo (rol, tono, formato). */
@@ -28,23 +28,10 @@ export class MissingApiKeyError extends Error {
   }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-export async function generateModelResponse(prompt: string, { instructions, model = 'nvidia/nemotron-3-ultra-550b-a55b:free' } : GenerateModelResponseOptions = {},): Promise<ModelResponse> {
-  
+export async function generateModelResponse(
+  prompt: string,
+  { instructions, model = DEFAULT_MODEL }: GenerateModelResponseOptions = {},
+): Promise<ModelResponse> {
   const apiKey = process.env.OPENROUTER_API_KEY
   if (!apiKey) throw new MissingApiKeyError()
 

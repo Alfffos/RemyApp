@@ -1,27 +1,12 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 
-const _geistSans = Geist({ subsets: ['latin'] })
-const _geistMono = Geist_Mono({ subsets: ['latin'] })
-
 export const metadata: Metadata = {
-  title: 'RemyApp',
-  description: 'Conexión con modelos de IA mediante el AI SDK de Vercel',
+  title: 'Remy · Tu alimentación, a tu ritmo',
+  description: 'Configurá tu perfil, tus objetivos y tus preferencias para preparar tu plan alimentario.',
 }
+export const viewport: Viewport = { themeColor: '#f6f7f2' }
 
-export const viewport: Viewport = {
-  themeColor: '#0f1115',
-}
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <html lang="es" className="bg-background">
-      <body className="font-sans antialiased">{children}</body>
-    </html>
-  )
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return <html lang="es-AR"><body>{children}</body></html>
 }

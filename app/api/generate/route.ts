@@ -22,12 +22,8 @@ export async function POST(request: Request) {
   }
 
   try {
-
-    // GENERATE
     const response = await generateModelResponse(parsed.data.prompt)
     return Response.json(response)
-  
-  
   } catch (error) {
     console.error('[v0] generateModelResponse failed:', error)
 
