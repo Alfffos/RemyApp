@@ -22,14 +22,18 @@ export async function POST(request: Request) {
   }
 
   try {
+
+    // GENERATE
     const response = await generateModelResponse(parsed.data.prompt)
     return Response.json(response)
+  
+  
   } catch (error) {
     console.error('[v0] generateModelResponse failed:', error)
 
     if (error instanceof MissingApiKeyError) {
       return Response.json(
-        { error: 'Falta configurar OPENROUTER_API_KEY en las variables de entorno.' },
+        { error: 'API KEY ERROR' },
         { status: 500 },
       )
     }

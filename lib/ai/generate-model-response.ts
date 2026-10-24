@@ -28,10 +28,23 @@ export class MissingApiKeyError extends Error {
   }
 }
 
-export async function generateModelResponse(
-  prompt: string,
-  { instructions, model = DEFAULT_MODEL }: GenerateModelResponseOptions = {},
-): Promise<ModelResponse> {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export async function generateModelResponse(prompt: string, { instructions, model = 'nvidia/nemotron-3-ultra-550b-a55b:free' } : GenerateModelResponseOptions = {},): Promise<ModelResponse> {
+  
   const apiKey = process.env.OPENROUTER_API_KEY
   if (!apiKey) throw new MissingApiKeyError()
 
