@@ -2,14 +2,16 @@
 
 import { useRef, useState, type ReactNode } from 'react'
 import { CartPricing } from '@/components/cart-pricing'
+import { SupermarketStep } from '@/components/supermarket-step'
 import { starterCart } from '@/lib/cart/cart'
-import { allergies, emptyProfile, meals, reviewReasons, toDietProfile, validateStep, weekdays, type FieldErrors, type ProfileDraft } from '@/lib/profile/profile'
+import { allergies, emptyProfile, meals, reviewReasons, selectedStores, SUMMARY_STEP, toDietProfile, validateStep, weekdays, type FieldErrors, type ProfileDraft } from '@/lib/profile/profile'
 
 const steps = [
   { title: 'Sobre vos', description: 'Empecemos por lo esencial para conocer tus necesidades.', short: 'Datos personales' },
   { title: 'Tu ritmo diario', description: 'Tu movimiento cotidiano también cuenta, además del ejercicio.', short: 'Actividad' },
   { title: '¿Qué querés lograr?', description: 'Elegí el objetivo que mejor representa este momento.', short: 'Objetivo' },
   { title: 'A tu gusto y a tu tiempo', description: 'Organicemos un plan que encaje con tu manera de comer.', short: 'Alimentación' },
+  { title: '¿Dónde hacés las compras?', description: 'Elegí los supermercados a los que tenés acceso para comparar precios.', short: 'Supermercados' },
   { title: 'Todo empieza por vos', description: 'Revisá tus respuestas. Podés editar cualquier sección antes de continuar.', short: 'Resumen' },
 ]
 const labels: Record<string, string> = {
@@ -47,7 +49,7 @@ export function ProfileForm() {
     setStep(next); setErrors({}); setFinished(false)
     requestAnimationFrame(() => { titleRef.current?.focus(); titleRef.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' }) })
   }
-  function edit(next: number) { setEditing(step === 4 || editing); move(next) }
+  function edit(next: number) { setEditing(step === SUMMARY_STEP || editing); move(next) }
   function advance() {
     const nextErrors = validateStep(step, draft)
     if (Object.keys(nextErrors).length) {
@@ -55,11 +57,11 @@ export function ProfileForm() {
       requestAnimationFrame(() => errorRef.current?.focus())
       return
     }
-    const next = editing ? 4 : step + 1
+    const next = editing ? SUMMARY_STEP : step + 1
     setEditing(false); move(next)
   }
   function finish() {
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < SUMMARY_STEP; i++) {
       const nextErrors = validateStep(i, draft)
       if (Object.keys(nextErrors).length) {
         setEditing(true); move(i); setErrors(nextErrors)
@@ -132,11 +134,11 @@ export function ProfileForm() {
         <div className="privacy-note"><span aria-hidden="true">◈</span><p><strong>Tu información es tuya.</strong><br />Se usa durante esta sesión. No se guarda en una base de datos y se borra al recargar.</p></div>
       </aside>
       <section className="form-card" aria-labelledby="step-title">
-        <div className="card-topline"><span>TU PERFIL ALIMENTARIO</span><span>{String(step + 1).padStart(2, '0')} <span className="muted">/ 05</span></span></div>
-        <div className="progress-track" role="progressbar" aria-label="Progreso del formulario" aria-valuemin={1} aria-valuemax={5} aria-valuenow={step + 1}><span style={{ width: ((step + 1) / 5 * 100) + '%' }} /></div>
+        <div className="card-topline"><span>TU PERFIL ALIMENTARIO</span><span>{String(step + 1).padStart(2, '0')} <span className="muted">/ {String(steps.length).padStart(2, '0')}</span></span></div>
+        <div className="progress-track" role="progressbar" aria-label="Progreso del formulario" aria-valuemin={1} aria-valuemax={steps.length} aria-valuenow={step + 1}><span style={{ width: ((step + 1) / steps.length * 100) + '%' }} /></div>
         <div className="card-body">
-          <div className="step-heading"><span className="section-icon" aria-hidden="true">{['◎', '↗', '⚑', '◒', '✓'][step]}</span><h2 id="step-title" tabIndex={-1} ref={titleRef}>{steps[step].title}</h2><p>{steps[step].description}</p></div>
-          <form noValidate onSubmit={e => { e.preventDefault(); if (step === 4) finish(); else advance() }}>
+          <div className="step-heading"><span className="section-icon" aria-hidden="true">{['◎', '↗', '⚑', '◒', '⌂', '✓'][step]}</span><h2 id="step-title" tabIndex={-1} ref={titleRef}>{steps[step].title}</h2><p>{steps[step].description}</p></div>
+          <form noValidate onSubmit={e => { e.preventDefault(); if (step === SUMMARY_STEP) finish(); else advance() }}>
             {Object.keys(errors).length > 0 && <div className="notice error-notice" tabIndex={-1} ref={errorRef} role="alert"><strong>Revisá estos datos para continuar.</strong><ul>{Object.entries(errors).map(([key, value]) => <li key={key}>{value}</li>)}</ul></div>}
             <div className="step-content">
             {step === 0 && <>
@@ -183,19 +185,22 @@ export function ProfileForm() {
               {choices('duration', '¿Cada cuánto hacés las compras?', [{ value: 'week', label: 'Cada semana' }, { value: 'month', label: 'Cada mes' }])}
               <Field name="cookingTime" label="Tiempo máximo para preparar una comida" hint="Opcional"><select {...inputProps('cookingTime')} value={draft.cookingTime} onChange={e => update('cookingTime', e.target.value)}><option value="">Sin preferencia</option><option value="15">Hasta 15 minutos</option><option value="30">Hasta 30 minutos</option><option value="60">Hasta 60 minutos</option></select></Field>
             </>}
-            {step === 4 && <>
+            {step === 4 && <SupermarketStep supermarkets={draft.supermarkets} selected={draft.selectedSupermarkets} error={errors.selectedSupermarkets}
+              onChange={(supermarkets, selected) => { update('supermarkets', supermarkets); update('selectedSupermarkets', selected) }} />}
+            {step === SUMMARY_STEP && <>
               {summary(0, [['Edad', draft.age + ' años'], ['Altura', draft.height + ' cm'], ['Peso actual', draft.weight + ' kg'], ['Sexo para el cálculo', labels[draft.sex]]])}
               {summary(1, [['Actividad cotidiana', labels[draft.dailyActivity]], ['Ejercicio', Number(draft.exerciseDays) > 0 ? draft.exerciseDays + ' días/semana · ' + draft.exerciseMinutes + ' min · ' + labels[draft.exerciseIntensity] : 'Sin ejercicio habitual']])}
               {summary(2, [['Objetivo', labels[draft.goal]], ...(draft.goal === 'gain' ? [['Aumentar masa muscular', labels[draft.muscleGain]] as [string, string]] : []), ...(draft.goal !== 'maintain' && draft.targetWeight ? [['Peso objetivo', draft.targetWeight + ' kg'] as [string, string]] : [])])}
               {summary(3, [['Alimentación', labels[draft.diet]], ['Alergias e intolerancias', draft.allergies.map(a => a === 'Otra' ? draft.otherAllergy : a).join(', ') || 'Ninguna informada'], ['Alimentos a evitar', draft.excludedFoods || 'Sin preferencias adicionales'], ['Comidas', meals.filter(m => draft.meals.includes(m)).join(' / ')], ['Días', weekdays.filter(d => draft.days.includes(d)).join(', ')], ['Compras', labels[draft.duration]], ['Tiempo para cocinar', draft.cookingTime ? 'Hasta ' + draft.cookingTime + ' min' : 'Sin preferencia']])}
+              {summary(4, selectedStores(draft).map(store => [store.name, new URL(store.url).host.replace(/^www\./, '')] as [string, string]))}
               {reasons.length > 0 ? <div className="notice" role="status"><strong>Tu plan necesita una evaluación profesional.</strong><ul>{reasons.map(reason => <li key={reason}>{reason}</li>)}</ul><p>Consultá con un/a nutricionista para adaptar el plan a tu situación. La generación automática no está habilitada para estos casos.</p></div> : <div className="gentle-note"><span aria-hidden="true">i</span><p>En esta primera versión dejamos listo tu perfil. La generación de planes estará disponible en una próxima etapa. Las calorías del futuro plan serán una estimación.</p></div>}
               {finished && <div className="notice success-notice" role="status"><strong>Tu perfil está listo.</strong><p>Completaste todos los datos. La generación de planes todavía está en desarrollo; mientras tanto podés comparar precios con un carrito inicial.</p></div>}
-              {finished && <CartPricing initialItems={starterCart(toDietProfile(draft))} />}
+              {finished && <CartPricing initialItems={starterCart(toDietProfile(draft))} stores={selectedStores(draft)} />}
             </>}
             </div>
             <footer className="form-footer">
               {step > 0 ? <button type="button" className="back-button" onClick={() => { setEditing(false); move(step - 1) }}>← Atrás</button> : <span className="required-note">Todos los campos de este paso son obligatorios.</span>}
-              <button className="primary-button" type="submit" disabled={step === 4 && (reasons.length > 0 || finished)}>{step === 4 ? (finished ? 'Perfil listo ✓' : 'Generar mi plan') : editing ? 'Guardar y volver al resumen' : 'Continuar'}{step !== 4 && <span aria-hidden="true">→</span>}</button>
+              <button className="primary-button" type="submit" disabled={step === SUMMARY_STEP && (reasons.length > 0 || finished)}>{step === SUMMARY_STEP ? (finished ? 'Perfil listo ✓' : 'Generar mi plan') : editing ? 'Guardar y volver al resumen' : 'Continuar'}{step !== 4 && <span aria-hidden="true">→</span>}</button>
             </footer>
           </form>
         </div>

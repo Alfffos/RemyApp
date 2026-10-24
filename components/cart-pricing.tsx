@@ -3,13 +3,14 @@
 import { useState } from 'react'
 import { MAX_CART_ITEMS } from '@/lib/cart/cart'
 import type { CartItem, CartQuote, ItemQuote } from '@/lib/cart/pricing'
+import type { Store } from '@/lib/scraper/stores'
 
 const currency = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' })
 const statusLabel: Record<ItemQuote['status'], string> = {
   found: '', not_found: 'Sin coincidencias', error: 'No se pudo leer', skipped: 'Sin tiempo',
 }
 
-export function CartPricing({ initialItems }: { initialItems: CartItem[] }) {
+export function CartPricing({ initialItems, stores }: { initialItems: CartItem[]; stores: Store[] }) {
   const [items, setItems] = useState<CartItem[]>(initialItems)
   const [newItem, setNewItem] = useState('')
   const [quote, setQuote] = useState<CartQuote | null>(null)
@@ -30,7 +31,7 @@ export function CartPricing({ initialItems }: { initialItems: CartItem[] }) {
     setLoading(true); setError(''); setQuote(null)
     try {
       const response = await fetch('/api/cart/price', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items, stores }),
       })
       const data = await response.json().catch(() => null)
       if (!response.ok) throw new Error(data?.error ?? 'No se pudieron consultar los precios.')

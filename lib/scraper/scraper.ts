@@ -107,8 +107,9 @@ async function quoteStore(browser: Browser, store: Store, cart: CartItem[], dead
  * the cheapest combination. Stores run in parallel; items run sequentially
  * per store to stay polite and avoid bans.
  */
-export async function priceCart(cart: CartItem[], { storeIds, budgetMs }: { storeIds?: string[]; budgetMs: number }): Promise<CartQuote> {
-  const selected = storeIds?.length ? allStores.filter(store => storeIds.includes(store.id)) : allStores
+export async function priceCart(cart: CartItem[], { stores, budgetMs }: { stores: Store[]; budgetMs: number }): Promise<CartQuote> {
+  // Known stores keep their canonical URL; custom ones come from the user.
+  const selected = stores.map(store => allStores.find(known => known.id === store.id) ?? store)
   const deadline = Date.now() + budgetMs
   const browser = await launchBrowser()
   try {

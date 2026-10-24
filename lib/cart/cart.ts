@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import type { toDietProfile } from '@/lib/profile/profile'
+import { MAX_STORES, storeSchema } from '@/lib/scraper/stores'
 import type { CartItem } from './pricing'
 
 export const MAX_CART_ITEMS = 25
@@ -11,7 +12,7 @@ export const cartItemSchema = z.object({
 
 export const cartRequestSchema = z.object({
   items: z.array(cartItemSchema).min(1, 'Agregá al menos un producto.').max(MAX_CART_ITEMS, `El carrito admite hasta ${MAX_CART_ITEMS} productos.`),
-  stores: z.array(z.string()).optional(),
+  stores: z.array(storeSchema).min(1, 'Elegí al menos un supermercado.').max(MAX_STORES, `Podés comparar hasta ${MAX_STORES} supermercados.`),
 })
 
 export type CartRequest = z.infer<typeof cartRequestSchema>

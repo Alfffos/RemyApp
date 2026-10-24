@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const quote = await priceCart(parsed.data.items, { storeIds: parsed.data.stores, budgetMs: SCRAPE_BUDGET_MS })
+    const quote = await priceCart(parsed.data.items, { stores: parsed.data.stores, budgetMs: SCRAPE_BUDGET_MS })
     return Response.json(quote)
   } catch (error) {
     console.error('[scraper] priceCart failed:', error)
