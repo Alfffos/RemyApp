@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@openrouter/ai-sdk-provider": "^3.1.0",
     "ai": "^7.0.152",
     "next": "^16.4.3",
     "react": "^19.3.1",

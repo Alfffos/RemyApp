@@ -1,5 +1,8 @@
 import { z } from 'zod'
-import { generateModelResponse } from '@/lib/ai/generate-model-response'
+import {
+  generateModelResponse,
+  MissingApiKeyError,
+} from '@/lib/ai/generate-model-response'
 
 export const maxDuration = 60
 
@@ -24,15 +27,10 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('[v0] generateModelResponse failed:', error)
 
-    const needsCreditCard =
-      error instanceof Error && error.message.includes('valid credit card')
-    if (needsCreditCard) {
+    if (error instanceof MissingApiKeyError) {
       return Response.json(
-        {
-          error:
-            'AI Gateway requiere una tarjeta registrada en tu cuenta de Vercel. Añádela en el dashboard (AI Gateway) para activar los créditos gratuitos.',
-        },
-        { status: 402 },
+        { error: 'Falta configurar OPENROUTER_API_KEY en las variables de entorno.' },
+        { status: 500 },
       )
     }
 
